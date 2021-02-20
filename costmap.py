@@ -23,6 +23,9 @@ class Items(object):
     ROBOT = 2
     GOAL = 3
 
+    CURRENT = 4
+    VISITED = 5
+
 
 @attrs(auto_attribs=True)
 class Costmap(object):
@@ -82,16 +85,18 @@ class Costmap(object):
             for c in range(min_col, max_col + 1):
                 if r == row and c == col:
                     continue
-                if self._data[r, c] == Items.OPEN:
+                if self._data[r, c] not in [Items.OBSTACLE, Items.ROBOT, Items.VISITED]:
                     neighbors.append((r, c))
         return neighbors
 
     def set_robot(self, robot_loc_rowcol: Tuple[int, int]):
         self._data[self.robot[0], self.robot[1]] = Items.OPEN
+        self.robot = robot_loc_rowcol
         self._data[robot_loc_rowcol[0], robot_loc_rowcol[1]] = Items.ROBOT
 
     def set_goal(self, goal_loc_rowcol: Tuple[int, int]):
         self._data[self.goal[0], self.goal[1]] = Items.OPEN
+        self.goal = goal_loc_rowcol
         self._data[goal_loc_rowcol[0], goal_loc_rowcol[1]] = Items.GOAL
 
     def set_value(self, rowcol: Tuple[int, int], value: Items):
@@ -132,7 +137,7 @@ class Costmap(object):
                 box = (top_left, btm_right)
                 # Draw box and fill with desired color
                 fill_color = self._items_to_colors_mapping[self._data[r, c]]
-                draw.rectangle(box, fill=fill_color, outline=Colors.GRAY)
+                draw.rectangle(box, fill=fill_color, outline=Colors.DARK_GRAY)
         del draw
         grid.show()
 
