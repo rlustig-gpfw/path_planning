@@ -10,7 +10,8 @@ from utils import clamp
 
 class Colors:
     WHITE = (255, 255, 255)
-    GRAY = (150, 150, 150)
+    GRAY = (170, 170, 170)
+    DARK_GRAY = (128, 128, 128)
     BLACK = (0, 0, 0)
     GREEN = (0, 255, 0)
     BLUE = (0, 0, 255)
@@ -73,7 +74,7 @@ class Costmap(object):
 
     def get_neighbors(self, row: int, col: int) -> Optional[Sequence]:
         neighbors = []
-        min_row = clamp(row - 1, 0, self.rows - 1)  #max(min(row - 1, self.rows + 1), self.rows + 1)  #row - 1 if row > 0 else 0
+        min_row = clamp(row - 1, 0, self.rows - 1)
         max_row = clamp(row + 1, 0, self.rows - 1)
         min_col = clamp(col - 1, 0, self.cols - 1)
         max_col = clamp(col + 1, 0, self.cols - 1)
@@ -102,7 +103,9 @@ class Costmap(object):
             Items.OPEN: Colors.WHITE,
             Items.OBSTACLE: Colors.BLACK,
             Items.ROBOT: Colors.BLUE,
-            Items.GOAL: Colors.GREEN
+            Items.GOAL: Colors.GREEN,
+            Items.VISITED: Colors.GRAY,
+            Items.PARENT: Colors.GRAY
         }
         return items_to_colors_mapping
 
