@@ -1,9 +1,10 @@
 import random
-from typing import Tuple, Optional, Sequence, Dict
+from typing import Tuple, Optional, Sequence, Dict, Any
 
+import matplotlib.pyplot as plt
 import numpy as np
-from PIL import Image, ImageDraw
-from attr import attrs
+from attr import attrs, attrib
+from matplotlib.colors import LinearSegmentedColormap, Colormap, Normalize
 
 from utils import clamp
 
@@ -15,6 +16,7 @@ class Colors:
     BLACK = (0, 0, 0)
     GREEN = (0, 255, 0)
     BLUE = (0, 0, 255)
+    LIGHT_BLUE = (173, 209, 255)
 
 
 class Items(object):
@@ -27,6 +29,16 @@ class Items(object):
     VISITED = 5
 
 
+ITEMS_TO_COLOR_MAPPING = {
+    Items.OPEN: Colors.WHITE,
+    Items.OBSTACLE: Colors.BLACK,
+    Items.ROBOT: Colors.BLUE,
+    Items.GOAL: Colors.GREEN,
+    Items.CURRENT: Colors.LIGHT_BLUE,
+    Items.VISITED: Colors.GRAY,
+}
+
+
 @attrs(auto_attribs=True)
 class Costmap(object):
 
@@ -37,7 +49,17 @@ class Costmap(object):
 
     _data: 'Array[M,N]'
     _cell_size: int = 25
-    _items_to_colors_mapping: Optional[Dict] = None
+    _items_to_colors_mapping: Optional[Dict[int, Tuple[int, int, int]]] = attrib(default=ITEMS_TO_COLOR_MAPPING)
+
+    _fig: Any = attrib(init=False)
+    _ax: plt.Axes = attrib(init=False)
+
+    _cmap: Colormap = attrib(init=False)
+    _norm: Normalize = attrib(init=False)
+
+    def __attrs_post_init__(self):
+        self._fig, self._ax = plt.subplots()
+        self._cmap, self._norm = self._create_colormap()
 
     @classmethod
     def create_map(
@@ -54,23 +76,20 @@ class Costmap(object):
         if not goal:
             goal = [rows - 1, cols - 1]
 
-        map = np.zeros((rows, cols), dtype=np.uint8)
-        map[robot[0], robot[1]] = Items.ROBOT
-        map[goal[0], goal[1]] = Items.GOAL
+        costmap = np.zeros((rows, cols), dtype=np.uint8)
+        costmap[robot[0], robot[1]] = Items.ROBOT
+        costmap[goal[0], goal[1]] = Items.GOAL
 
         print(f"Robot: {robot}")
         print(f"Goal: {goal}")
-
-        items_to_colors_mapping = cls.get_item_to_colors_mapping()
 
         return Costmap(
             rows=rows,
             cols=cols,
             robot=robot,
             goal=goal,
-            data=map,
-            cell_size=cell_size,
-            items_to_colors_mapping=items_to_colors_mapping)
+            data=costmap,
+            cell_size=cell_size)
 
     def get_data(self):
         return self._data
@@ -102,17 +121,14 @@ class Costmap(object):
     def set_value(self, rowcol: Tuple[int, int], value: Items):
         self._data[rowcol[0], rowcol[1]] = value
 
-    @classmethod
-    def get_item_to_colors_mapping(cls):
-        items_to_colors_mapping = {
-            Items.OPEN: Colors.WHITE,
-            Items.OBSTACLE: Colors.BLACK,
-            Items.ROBOT: Colors.BLUE,
-            Items.GOAL: Colors.GREEN,
-            Items.VISITED: Colors.GRAY,
-            Items.PARENT: Colors.GRAY
-        }
-        return items_to_colors_mapping
+    def _create_colormap(self):
+        color_vals = list(self._items_to_colors_mapping.keys())
+        colors = [np.array(c)/255. for c in self._items_to_colors_mapping.values()]
+
+        norm = plt.Normalize(min(color_vals), max(color_vals))
+        tuples = list(zip(map(norm, color_vals), colors))
+        cmap = LinearSegmentedColormap.from_list("", tuples)
+        return cmap, norm
 
     def print(self):
         for r in range(0, self.rows):
@@ -122,24 +138,13 @@ class Costmap(object):
         print()
 
     def draw(self):
-        if not self._items_to_colors_mapping:
-            self._items_to_colors_mapping = Costmap.get_item_to_colors_mapping()
-
-        image_size = self.cols * self._cell_size, self.rows * self._cell_size
-        grid = Image.new("RGB", image_size, Colors.WHITE)
-        draw = ImageDraw.Draw(grid)
-
-        for r in range(0, self.rows):
-            for c in range(0, self.cols):
-                # Find top left and bottom right box corners
-                top_left = c * self._cell_size, r * self._cell_size
-                btm_right = (c + 1) * self._cell_size, (r + 1) * self._cell_size
-                box = (top_left, btm_right)
-                # Draw box and fill with desired color
-                fill_color = self._items_to_colors_mapping[self._data[r, c]]
-                draw.rectangle(box, fill=fill_color, outline=Colors.DARK_GRAY)
-        del draw
-        grid.show()
+        fig, ax = plt.subplots()
+        ax.imshow(self._data, cmap=self._cmap, norm=self._norm)
+        ax.axis('equal')
+        ax.set_xlim(-0.5, self.cols - 0.5)
+        ax.set_ylim(-0.5, self.rows - 0.5)
+        plt.draw()
+        plt.pause(0.05)
 
 
 def generate_random_rowcol(max_row: int, max_col: int) -> Tuple[int, int]:

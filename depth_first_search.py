@@ -42,6 +42,8 @@ class DFS(object):
         # Add neighbors to list, add to parent list
         neighbors = self._costmap.get_neighbors(current_pos[0], current_pos[1])
         for n in neighbors:
+            if n != self._costmap.goal:
+                self._costmap.set_value(n, Items.CURRENT)
             self._stack.append(n)
             # Save parents-to-child map so that the path can be extracted
             self._parent_map[n] = current_pos
