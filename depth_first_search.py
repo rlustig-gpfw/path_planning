@@ -29,7 +29,9 @@ class DFS(object):
             # Create and return path
             path = []
             curr = current_pos
-            while curr is not self._costmap.robot:
+            while curr != self._costmap.robot:
+                if curr != self._costmap.goal:
+                    self._costmap.set_value(curr, Items.PARENT)
                 path.append(curr)
                 curr = self._parent_map[curr]
             path.reverse()
