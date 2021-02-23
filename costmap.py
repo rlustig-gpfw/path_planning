@@ -17,6 +17,7 @@ class Colors:
     GREEN = (0, 255, 0)
     BLUE = (0, 0, 255)
     LIGHT_BLUE = (173, 209, 255)
+    BLUE_GREEN = (33, 182, 68)
 
 
 class Items(object):
@@ -27,6 +28,7 @@ class Items(object):
 
     CURRENT = 4
     VISITED = 5
+    PARENT = 6
 
 
 ITEMS_TO_COLOR_MAPPING = {
@@ -36,6 +38,7 @@ ITEMS_TO_COLOR_MAPPING = {
     Items.GOAL: Colors.GREEN,
     Items.CURRENT: Colors.LIGHT_BLUE,
     Items.VISITED: Colors.GRAY,
+    Items.PARENT: Colors.BLUE_GREEN
 }
 
 
@@ -140,9 +143,7 @@ class Costmap(object):
     def draw(self):
         fig, ax = plt.subplots()
         ax.imshow(self._data, cmap=self._cmap, norm=self._norm)
-        ax.axis('equal')
-        ax.set_xlim(-0.5, self.cols - 0.5)
-        ax.set_ylim(-0.5, self.rows - 0.5)
+        ax.axis('off')
         plt.draw()
         plt.pause(0.05)
 
