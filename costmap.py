@@ -1,10 +1,11 @@
 import random
-from typing import Tuple, Optional, Sequence, Dict, Any
+from typing import Tuple, Optional, Sequence, Dict, Any, List
 
+import imageio
 import matplotlib.pyplot as plt
 import numpy as np
 from attr import attrs, attrib
-from matplotlib.colors import LinearSegmentedColormap, Colormap, Normalize
+from matplotlib.colors import Colormap, Normalize
 
 from utils import clamp
 
@@ -51,7 +52,6 @@ class Costmap(object):
     goal: Tuple[int, int]
 
     _data: 'Array[M,N]'
-    _cell_size: int = 25
     _items_to_colors_mapping: Optional[Dict[int, Tuple[int, int, int]]] = attrib(default=ITEMS_TO_COLOR_MAPPING)
 
     _fig: Any = attrib(init=False)
@@ -60,16 +60,11 @@ class Costmap(object):
     _cmap: Colormap = attrib(init=False)
     _norm: Normalize = attrib(init=False)
 
-    def __attrs_post_init__(self):
-        self._fig, self._ax = plt.subplots()
-        self._cmap, self._norm = self._create_colormap()
-
     @classmethod
     def create_map(
             cls,
             rows: int,
             cols: int,
-            cell_size: int = 25,
             robot: Optional[Tuple[int, int]] = None,
             goal: Optional[Tuple[int, int]] = None
     ):
@@ -91,8 +86,7 @@ class Costmap(object):
             cols=cols,
             robot=robot,
             goal=goal,
-            data=costmap,
-            cell_size=cell_size)
+            data=costmap)
 
     def get_data(self):
         return self._data
@@ -124,15 +118,6 @@ class Costmap(object):
     def set_value(self, rowcol: Tuple[int, int], value: Items):
         self._data[rowcol[0], rowcol[1]] = value
 
-    def _create_colormap(self):
-        color_vals = list(self._items_to_colors_mapping.keys())
-        colors = [np.array(c)/255. for c in self._items_to_colors_mapping.values()]
-
-        norm = plt.Normalize(min(color_vals), max(color_vals))
-        tuples = list(zip(map(norm, color_vals), colors))
-        cmap = LinearSegmentedColormap.from_list("", tuples)
-        return cmap, norm
-
     def print(self):
         for r in range(0, self.rows):
             print()
@@ -140,12 +125,25 @@ class Costmap(object):
                 print(self._data[r, c], end=" ")
         print()
 
-    def draw(self):
-        fig, ax = plt.subplots()
-        ax.imshow(self._data, cmap=self._cmap, norm=self._norm)
-        ax.axis('off')
-        plt.draw()
-        plt.pause(0.05)
+    def draw(self, show: bool = True) -> 'Array[M,N,3]':
+        display_image = self._colorize_costmap()
+        if show:
+            fig, ax = plt.subplots()
+            display_image = ax.imshow(self._data, cmap=self._cmap, norm=self._norm)
+            ax.imshow(display_image)
+            ax.axis('off')
+            plt.draw()
+            plt.pause(0.05)
+
+        return display_image
+
+    def _colorize_costmap(self) -> 'Array[M,N,3]':
+        colorized_costmap = np.zeros((self.rows, self.cols, 3), dtype=np.uint8)
+        for item, color in self._items_to_colors_mapping.items():
+            mask = self._data == item
+            colorized_costmap[mask] = color
+
+        return colorized_costmap
 
 
 @attrs(auto_attribs=True, slots=True)
