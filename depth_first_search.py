@@ -2,7 +2,7 @@ from typing import Tuple, Dict, List
 
 from attr import attrs, attrib
 
-from costmap import Costmap, Items, generate_random_costmap
+from costmap import Costmap, Items, generate_random_costmap, EasyGIFWriter
 
 
 @attrs(auto_attribs=True)
@@ -54,14 +54,16 @@ class DFS(object):
 
 
 if __name__ == "__main__":
-    costmap = generate_random_costmap(8, 8)
+    costmap = generate_random_costmap(20, 30)
     costmap.draw()
 
-    dfs = DFS(costmap)
-    while True:
-        path = dfs.step()
-        costmap.draw()
-        if path:
-            break
+    with EasyGIFWriter("dfs.gif", scale_factor=25) as gif_writer:
+        dfs = DFS(costmap)
+        while True:
+            path = dfs.step()
+            im = costmap.draw()
+            gif_writer.write(im)
+            if path:
+                break
 
     print(path)
