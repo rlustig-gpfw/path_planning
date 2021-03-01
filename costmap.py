@@ -148,6 +148,42 @@ class Costmap(object):
         plt.pause(0.05)
 
 
+@attrs(auto_attribs=True, slots=True)
+class EasyGIFWriter(object):
+    _file_path: str
+    _frames_per_second: int = 6
+    _frame_list: List['Array[M,N,3]'] = list()
+    _scale_factor: int = 1
+    _hold_last_frame_time: float = 2
+
+    def __enter__(self):
+        return self
+
+    def write(self, image):
+        self._frame_list.append(image)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        assert len(self._frame_list) > 0, "The number of GIF frames is 0"
+        if self._scale_factor != 1:
+            frame_buffer = []
+            for im in self._frame_list:
+                # NN upsampling only - doesn't require other libs
+                upscaled_im = im.repeat(self._scale_factor, axis=0).repeat(self._scale_factor, axis=1)
+                frame_buffer.append(upscaled_im)
+        else:
+            frame_buffer = self._frame_list
+
+        # Add frames to the end of the gif, if desired
+        num_last_frames = self._hold_last_frame_time * self._frames_per_second
+        if num_last_frames > 1:
+            for _ in range(1, int(num_last_frames)):
+                frame_buffer.append(frame_buffer[-1])
+
+        # Write out gif
+        with open(self._file_path, 'wb') as video_file:
+            imageio.mimwrite(video_file, frame_buffer, "GIF", fps=self._frames_per_second)
+
+
 def generate_random_rowcol(max_row: int, max_col: int) -> Tuple[int, int]:
     return random.randint(0, max_row - 1), random.randint(0, max_col - 1)
 
