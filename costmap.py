@@ -91,7 +91,7 @@ class Costmap(object):
     def get_data(self):
         return self._data
 
-    def get_neighbors(self, row: int, col: int) -> Optional[Sequence]:
+    def get_open_neighbors(self, row: int, col: int) -> Optional[Sequence]:
         neighbors = []
         min_row = clamp(row - 1, 0, self.rows - 1)
         max_row = clamp(row + 1, 0, self.rows - 1)
@@ -213,5 +213,5 @@ if __name__ == "__main__":
     costmap = generate_random_costmap(20, 30)
     costmap.print()
 
-    print(costmap.get_neighbors(0, 0))
+    print(costmap.get_open_neighbors(0, 0))
     costmap.draw()
