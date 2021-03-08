@@ -101,7 +101,7 @@ class Costmap(object):
             for c in range(min_col, max_col + 1):
                 if r == row and c == col:
                     continue
-                if self._data[r, c] not in [Items.OBSTACLE, Items.ROBOT, Items.VISITED]:
+                if self._data[r, c] not in [Items.OBSTACLE, Items.ROBOT, Items.VISITED, Items.CURRENT]:
                     neighbors.append((r, c))
         return neighbors
 
