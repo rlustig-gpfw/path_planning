@@ -129,8 +129,7 @@ class Costmap(object):
         display_image = self._colorize_costmap()
         if show:
             fig, ax = plt.subplots()
-            ax.imshow(display_image)#, cmap=self._cmap, norm=self._norm)
-            # ax.imshow(display_image)
+            ax.imshow(display_image)
             ax.axis('off')
             plt.draw()
             plt.pause(0.05)
