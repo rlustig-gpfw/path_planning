@@ -91,7 +91,7 @@ class Costmap(object):
     def get_data(self):
         return self._data
 
-    def get_open_neighbors(self, row: int, col: int) -> Optional[Sequence]:
+    def get_open_neighbors(self, row: int, col: int) -> Optional[Sequence[Tuple[int, int]]]:
         neighbors = []
         min_row = clamp(row - 1, 0, self.rows - 1)
         max_row = clamp(row + 1, 0, self.rows - 1)
@@ -197,6 +197,31 @@ def generate_random_costmap(rows: int = 10, cols: int = 10, obstacle_percentage:
     costmap = Costmap.create_map(rows, cols)
     data = costmap.get_data()
     data[obstacles] = Items.OBSTACLE
+
+    print(f"New")
+    print(f"Robot: {robot}")
+    print(f"Goal: {goal}")
+
+    costmap.set_robot(robot)
+    costmap.set_goal(goal)
+
+    return costmap
+
+
+def generate_vertical_wall_costmap(rows: int = 10, cols: int = 10):
+    assert rows > 1 and cols > 1
+    # Find
+    wall_rows = list(range(rows))
+    wall_rows.remove(rows // 2)  # Remove middle element
+    wall_col = cols // 2
+
+    robot = (0, 0)
+    goal = (rows - 1, cols - 1)
+
+    costmap = Costmap.create_map(rows, cols)
+    data = costmap.get_data()
+    for row in wall_rows:
+        data[row, wall_col] = Items.OBSTACLE
 
     print(f"New")
     print(f"Robot: {robot}")
