@@ -43,13 +43,16 @@ ITEMS_TO_COLOR_MAPPING = {
 }
 
 
-@attrs(auto_attribs=True, slots=True)
+@attrs(auto_attribs=True, slots=True, frozen=True)
 class Location:
     x: int
     y: int
 
     def __sub__(self, other: 'Location'):
         return Location(self.x - other.x, self.y - other.y)
+
+    def __str__(self):
+        return f"(x={self.x}, y={self.y})"
 
 
 @attrs(auto_attribs=True)
@@ -110,7 +113,7 @@ class Costmap(object):
         return self._data
 
     def get_value(self, location):
-        return self._data[location[0], location[1]]
+        return self._data[location.y, location.x]
 
     def get_open_neighbors(self, loc: Location) -> Optional[Sequence[Location]]:
         col = loc.x
@@ -171,7 +174,7 @@ class Costmap(object):
 @attrs(auto_attribs=True, slots=True)
 class EasyGIFWriter(object):
     _file_path: str
-    _frames_per_second: int = 6
+    _frames_per_second: int = 18
     _frame_list: List['Array[M,N,3]'] = list()
     _scale_factor: int = 1
     _hold_last_frame_time: float = 2
