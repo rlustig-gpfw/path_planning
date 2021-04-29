@@ -43,13 +43,22 @@ ITEMS_TO_COLOR_MAPPING = {
 }
 
 
+@attrs(auto_attribs=True, slots=True)
+class Location:
+    x: int
+    y: int
+
+    def __sub__(self, other: 'Location'):
+        return Location(self.x - other.x, self.y - other.y)
+
+
 @attrs(auto_attribs=True)
 class Costmap(object):
 
     rows: int
     cols: int
-    robot: Tuple[int, int]
-    goal: Tuple[int, int]
+    robot: Location
+    goal: Location
 
     _data: 'Array[M,N]'
     _items_to_colors_mapping: Optional[Dict[int, Tuple[int, int, int]]] = attrib(default=ITEMS_TO_COLOR_MAPPING)
@@ -65,18 +74,18 @@ class Costmap(object):
             cls,
             rows: int,
             cols: int,
-            robot: Optional[Tuple[int, int]] = None,
-            goal: Optional[Tuple[int, int]] = None
+            robot: Optional[Location] = None,
+            goal: Optional[Location] = None
     ):
         if not robot:
-            robot = [0, 0]
+            robot = Location(0, 0)
 
         if not goal:
-            goal = [rows - 1, cols - 1]
+            goal = Location(cols - 1, rows - 1)
 
         costmap = np.zeros((rows, cols), dtype=np.uint8)
-        costmap[robot[0], robot[1]] = Items.ROBOT
-        costmap[goal[0], goal[1]] = Items.GOAL
+        costmap[robot.y, robot.x] = Items.ROBOT
+        costmap[goal.y, goal.x] = Items.GOAL
 
         print(f"Robot: {robot}")
         print(f"Goal: {goal}")
@@ -88,10 +97,24 @@ class Costmap(object):
             goal=goal,
             data=costmap)
 
+    # TODO
+    # @classmethod
+    # def from_map(
+    #         cls,
+    #         map: np.array,
+    #         robot: Optional[Tuple[int, int]] = None,
+    #         goal: Optional[Tuple[int, int]] = None
+    # ):
+
     def get_data(self):
         return self._data
 
-    def get_open_neighbors(self, row: int, col: int) -> Optional[Sequence[Tuple[int, int]]]:
+    def get_value(self, location):
+        return self._data[location[0], location[1]]
+
+    def get_open_neighbors(self, loc: Location) -> Optional[Sequence[Location]]:
+        col = loc.x
+        row = loc.y
         neighbors = []
         min_row = clamp(row - 1, 0, self.rows - 1)
         max_row = clamp(row + 1, 0, self.rows - 1)
@@ -101,22 +124,22 @@ class Costmap(object):
             for c in range(min_col, max_col + 1):
                 if r == row and c == col:
                     continue
-                if self._data[r, c] not in [Items.OBSTACLE, Items.ROBOT, Items.VISITED, Items.CURRENT]:
-                    neighbors.append((r, c))
+                if self._data[r, c] not in [Items.OBSTACLE, Items.ROBOT, Items.VISITED]:
+                    neighbors.append(Location(x=c, y=r))
         return neighbors
 
-    def set_robot(self, robot_loc_rowcol: Tuple[int, int]):
-        self._data[self.robot[0], self.robot[1]] = Items.OPEN
-        self.robot = robot_loc_rowcol
-        self._data[robot_loc_rowcol[0], robot_loc_rowcol[1]] = Items.ROBOT
+    def set_robot(self, robot: Location):
+        self._data[self.robot.y, self.robot.x] = Items.OPEN
+        self.robot = robot
+        self._data[robot.y, robot.x] = Items.ROBOT
 
-    def set_goal(self, goal_loc_rowcol: Tuple[int, int]):
-        self._data[self.goal[0], self.goal[1]] = Items.OPEN
-        self.goal = goal_loc_rowcol
-        self._data[goal_loc_rowcol[0], goal_loc_rowcol[1]] = Items.GOAL
+    def set_goal(self, goal: Location):
+        self._data[self.goal.y, self.goal.x] = Items.OPEN
+        self.goal = goal
+        self._data[goal.y, goal.x] = Items.GOAL
 
-    def set_value(self, rowcol: Tuple[int, int], value: Items):
-        self._data[rowcol[0], rowcol[1]] = value
+    def set_value(self, loc: Location, value: Items):
+        self._data[loc.y, loc.x] = value
 
     def print(self):
         for r in range(0, self.rows):
@@ -181,26 +204,22 @@ class EasyGIFWriter(object):
             imageio.mimwrite(video_file, frame_buffer, "GIF", fps=self._frames_per_second)
 
 
-def generate_random_rowcol(max_row: int, max_col: int) -> Tuple[int, int]:
-    return random.randint(0, max_row - 1), random.randint(0, max_col - 1)
+def generate_random_location(max_row: int, max_col: int) -> Location:
+    return Location(x=random.randint(0, max_col - 1), y=random.randint(0, max_row - 1))
 
 
 def generate_random_costmap(rows: int = 10, cols: int = 10, obstacle_percentage: float = 0.25):
 
     assert rows > 1 and cols > 1
     obstacles = np.random.rand(rows, cols) <= obstacle_percentage
-    robot = generate_random_rowcol(rows, cols)
+    robot = generate_random_location(rows, cols)
     goal = robot
     while robot == goal:
-        goal = generate_random_rowcol(rows, cols)
+        goal = generate_random_location(rows, cols)
 
     costmap = Costmap.create_map(rows, cols)
     data = costmap.get_data()
     data[obstacles] = Items.OBSTACLE
-
-    print(f"New")
-    print(f"Robot: {robot}")
-    print(f"Goal: {goal}")
 
     costmap.set_robot(robot)
     costmap.set_goal(goal)
@@ -212,20 +231,17 @@ def generate_vertical_wall_costmap(rows: int = 10, cols: int = 10):
     assert rows > 1 and cols > 1
     # Find
     wall_rows = list(range(rows))
-    wall_rows.remove(rows // 2)  # Remove middle element
+    # wall_rows.remove(rows // 2)  # Remove middle element
+    wall_rows.remove(0)
     wall_col = cols // 2
 
-    robot = (0, 0)
-    goal = (rows - 1, cols - 1)
+    robot = Location(0, 0)
+    goal = Location(cols - 1, rows - 1)
 
     costmap = Costmap.create_map(rows, cols)
     data = costmap.get_data()
     for row in wall_rows:
         data[row, wall_col] = Items.OBSTACLE
-
-    print(f"New")
-    print(f"Robot: {robot}")
-    print(f"Goal: {goal}")
 
     costmap.set_robot(robot)
     costmap.set_goal(goal)
@@ -237,5 +253,5 @@ if __name__ == "__main__":
     costmap = generate_random_costmap(20, 30)
     costmap.print()
 
-    print(costmap.get_open_neighbors(0, 0))
+    print(costmap.get_open_neighbors(Location(0, 0)))
     costmap.draw()
