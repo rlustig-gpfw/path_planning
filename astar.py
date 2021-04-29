@@ -13,25 +13,10 @@ from costmap import Costmap, Items, generate_random_costmap, EasyGIFWriter, gene
 #         return
 
 
-@attrs(auto_attribs=True, frozen=True, slots=True)
-class CellData:
-    position: Tuple[int, int]
-    costmap_value: int
-    f: float = 0.
-    g: float = 0.
-
-
-@attrs(auto_attribs=True, frozen=True, order=False)
-class PriorityCell(object):
-    priority: float  # Any comparable data type
-    data: CellData
-
-    def __lt__(self, other):
-        """ Implementing "less-than" allows you to use this object in a priority queue.
-        :param other: Another Observation
-        :return: True if this timestamp is less than the other.
-        """
-        return self.priority < other.priority
+def heuristic(a, b) -> float:
+    x1, y1 = a
+    x2, y2 = b
+    return (x1 - x2) ** 2 + (y1 - y2) ** 2
 
 
 @attrs(auto_attribs=True)
@@ -44,35 +29,24 @@ class AStar(object):
 
     _parent_map: Dict[Tuple, Tuple] = attrib(init=False, factory=dict)
     _queue: PriorityQueue = attrib(init=False, factory=lambda: PriorityQueue())
-    _loc_cell_map: Dict[Tuple[int, int], CellData] = attrib(init=False, factory=dict)
+
+    _cost_so_far: Dict[Tuple[int, int], float] = attrib(init=False, factory=dict)
 
     def __attrs_post_init__(self):
         # Append robot position as the starting node
-        cell_data = CellData(position=self._costmap.robot, costmap_value=0)
-        self._queue.put(PriorityCell(priority=0, data=cell_data))
+        self._queue.put((0, self._costmap.robot))
         self._goal = self._costmap.goal
-
-    def _compute_cost(self, current_costs, current_position):
-        p_r, p_c = current_position
-        g = current_costs.g + 1
-        h = (self._costmap.goal[0] - p_r) ** 2 + (self._costmap.goal[1] - p_c) ** 2
-        f = g + h
-        return f, g
+        self._cost_so_far[self._costmap.robot] = 0
 
     def step(self):
-
-        # VISITED = closed list
-        # CURRENT = open list
 
         if self._queue.qsize() == 0:
             raise Exception("Path does not exist!")
 
-        cell: PriorityCell = self._queue.get()
-        cell_data = cell.data
-        current_pos = cell_data.position
-        current_value = self._costmap.get_data()[current_pos[0], current_pos[1]]
+        _, current_pos = self._queue.get()
+        current_value = self._costmap.get_value(current_pos)
 
-        if current_value == Items.GOAL:
+        if current_pos == self._goal:
             # Create and return path
             path = []
             curr = current_pos
@@ -91,54 +65,31 @@ class AStar(object):
         # Add neighbors to list, add to parent list
         neighbors = self._costmap.get_open_neighbors(current_pos[0], current_pos[1])
         for n in neighbors:
+            dist_cost = 1.
+            if (current_pos[0] - n[0]) == 0 or (current_pos[1] - n[1]) == 0:
+                dist_cost = 2 ** 0.5
 
-            neighbor_value = self._costmap.get_data()[n[0], n[1]]
+            new_cost = self._cost_so_far[current_pos] + dist_cost
 
-            # Shortcut to goal
-            if n == self._costmap.goal:
-                neighbor_cell_data = CellData(
-                    position=n,
-                    costmap_value=0,
-                    f=-1
-                )
-                self._queue.put(PriorityCell(priority=-1, data=neighbor_cell_data))
+            if n not in self._cost_so_far or new_cost < self._cost_so_far[n]:
+                self._cost_so_far[n] = new_cost
+                # f = g + h
+                priority = new_cost + heuristic(n, self._costmap.goal)
+                # Add to queue
+                self._queue.put((priority, n))
+                # Save parents-to-child map so that the path can be extracted
                 self._parent_map[n] = current_pos
-                return
 
-            # Compute cost
-            f, g = self._compute_cost(cell_data, n)
-
-            neighbor_cell_data = self._loc_cell_map.get(n, None)
-
-            # Skip this neighbor if:
-            #  - we've seen this cell before and
-            #  - the current computed cost is greater than the previously computed cost
-            if neighbor_value == Items.CURRENT and neighbor_cell_data and g > neighbor_cell_data.g:
-                continue
-
-            neighbor_cell_data = CellData(
-                position=n,
-                costmap_value=g,
-                f=f,
-                g=g
-            )
-
-            # Mark as current (open list)
-            self._costmap.set_value(n, Items.CURRENT)
-            # Add to queue
-            self._queue.put(PriorityCell(priority=f, data=neighbor_cell_data))
-            # Add to hashmap
-            self._loc_cell_map[n] = neighbor_cell_data
-
-            # Save parents-to-child map so that the path can be extracted
-            self._parent_map[n] = current_pos
+                # Mark costmap value so that it can be drawn
+                if self._costmap.get_value(n) != Items.GOAL:
+                    self._costmap.set_value(n, Items.CURRENT)
 
         return None
 
 
 if __name__ == "__main__":
     costmap = generate_random_costmap(20, 30, 0.4)
-    # costmap = generate_vertical_wall_costmap(rows=20)
+    # costmap = generate_vertical_wall_costmap(rows=10)
     costmap.draw()
 
     with EasyGIFWriter("astar.gif", scale_factor=25) as gif_writer:
