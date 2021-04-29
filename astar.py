@@ -1,22 +1,29 @@
 from queue import PriorityQueue
-from typing import Dict, Tuple, List
+from typing import Dict, Tuple, Callable
 
 from attr import attrs, attrib
 
-from costmap import Costmap, Items, generate_random_costmap, EasyGIFWriter, generate_vertical_wall_costmap
+from costmap import Costmap, Items, generate_random_costmap, EasyGIFWriter, generate_vertical_wall_costmap, Location
 
 
-# TODO
-# class AStarHueristics:
-#     @staticmethod
-#     def manhattan(node1, node2):
-#         return
+class AStarHeuristics:
+    @staticmethod
+    def manhattan(a: Location, b: Location):
+        diff = a - b
+        return abs(diff.x) + abs(diff.y)
 
+    @staticmethod
+    def euclidean(a: Location, b: Location):
+        diff = a - b
+        return (diff.x ** 2 + diff.y ** 2) ** 0.5
 
-def heuristic(a, b) -> float:
-    x1, y1 = a
-    x2, y2 = b
-    return (x1 - x2) ** 2 + (y1 - y2) ** 2
+    @staticmethod
+    def chebyshev(a: Location, b: Location):
+        # Explores more as it searches for the goal
+        diff = a - b
+        dx = abs(diff.x)
+        dy = abs(diff.y)
+        return dx + dy - 2 * min(dx, dy)
 
 
 @attrs(auto_attribs=True)
@@ -26,11 +33,13 @@ class AStar(object):
     # g = dist between current node and start node
     # h = heuristic - est dist from current node to end node
     _costmap: Costmap
+    _heuristic: Callable[[Location, Location], float] = AStarHeuristics.chebyshev
 
     _parent_map: Dict[Tuple, Tuple] = attrib(init=False, factory=dict)
     _queue: PriorityQueue = attrib(init=False, factory=lambda: PriorityQueue())
+    _cost_so_far: Dict[Location, float] = attrib(init=False, factory=dict)
 
-    _cost_so_far: Dict[Tuple[int, int], float] = attrib(init=False, factory=dict)
+    SQRT2 = 0.5 ** 2
 
     def __attrs_post_init__(self):
         # Append robot position as the starting node
@@ -43,7 +52,7 @@ class AStar(object):
         if self._queue.qsize() == 0:
             raise Exception("Path does not exist!")
 
-        _, current_pos = self._queue.get()
+        current_pos: Location = self._queue.get()[1]
         current_value = self._costmap.get_value(current_pos)
 
         if current_pos == self._goal:
@@ -63,18 +72,19 @@ class AStar(object):
             self._costmap.set_value(current_pos, Items.VISITED)
 
         # Add neighbors to list, add to parent list
-        neighbors = self._costmap.get_open_neighbors(current_pos[0], current_pos[1])
+        neighbors = self._costmap.get_open_neighbors(current_pos)
         for n in neighbors:
-            dist_cost = 1.
-            if (current_pos[0] - n[0]) == 0 or (current_pos[1] - n[1]) == 0:
-                dist_cost = 2 ** 0.5
+            # Cost to move to next neighbor
+            diff = current_pos - n
+            dist_cost = 1 if diff.x == 1 or diff.y == 1 else self.SQRT2
 
+            # g cost, includes current cost + cost to move to next neighbor
             new_cost = self._cost_so_far[current_pos] + dist_cost
 
             if n not in self._cost_so_far or new_cost < self._cost_so_far[n]:
                 self._cost_so_far[n] = new_cost
                 # f = g + h
-                priority = new_cost + heuristic(n, self._costmap.goal)
+                priority = new_cost + self._heuristic(n, self._costmap.goal)
                 # Add to queue
                 self._queue.put((priority, n))
                 # Save parents-to-child map so that the path can be extracted
