@@ -1,5 +1,5 @@
 from queue import PriorityQueue
-from typing import Dict, Tuple, Callable
+from typing import Dict, Tuple, Callable, Optional, Sequence
 
 from attr import attrs, attrib
 
@@ -33,7 +33,7 @@ class AStar(object):
     # g = dist between current node and start node
     # h = heuristic - est dist from current node to end node
     _costmap: Costmap
-    _heuristic: Callable[[Location, Location], float] = AStarHeuristics.chebyshev
+    _heuristic: Callable[[Location, Location], float] = AStarHeuristics.euclidean
 
     _parent_map: Dict[Tuple, Tuple] = attrib(init=False, factory=dict)
     _queue: PriorityQueue = attrib(init=False, factory=lambda: PriorityQueue())
@@ -47,7 +47,21 @@ class AStar(object):
         self._goal = self._costmap.goal
         self._cost_so_far[self._costmap.robot] = 0
 
-    def step(self):
+    def _compute_movement_cost(self, from_loc: Location, to_loc: Location) -> float:
+        dist_cost = 1
+
+        # Add small penalty to diagonal movements for better looking paths:
+        # https://www.redblobgames.com/pathfinding/a-star/implementation.html
+        penalty = 0
+        (x1, y1) = from_loc.x, from_loc.y
+        (x2, y2) = to_loc.x, to_loc.y
+        if (x1 + y1) % 2 == 0 and x2 != x1:
+            penalty = 1
+        if (x1 + y1) % 2 == 1 and y2 != y1:
+            penalty = 1
+        return dist_cost + 0.001 * penalty
+
+    def step(self) -> Optional[Sequence[Location]]:
 
         if self._queue.qsize() == 0:
             raise Exception("Path does not exist!")
@@ -74,14 +88,14 @@ class AStar(object):
         # Add neighbors to list, add to parent list
         neighbors = self._costmap.get_open_neighbors(current_pos)
         for n in neighbors:
-            # Cost to move to next neighbor
-            diff = current_pos - n
-            dist_cost = 1 if diff.x == 1 or diff.y == 1 else self.SQRT2
+            # Cost to move from current position to neighbot
+            dist_cost = self._compute_movement_cost(current_pos, n)
 
-            # g cost, includes current cost + cost to move to next neighbor
+            # Update base cost with cost to move to neighbor
             new_cost = self._cost_so_far[current_pos] + dist_cost
 
             if n not in self._cost_so_far or new_cost < self._cost_so_far[n]:
+                # Save or update current cost
                 self._cost_so_far[n] = new_cost
                 # f = g + h
                 priority = new_cost + self._heuristic(n, self._costmap.goal)
