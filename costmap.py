@@ -90,24 +90,12 @@ class Costmap(object):
         costmap[robot.y, robot.x] = Items.ROBOT
         costmap[goal.y, goal.x] = Items.GOAL
 
-        print(f"Robot: {robot}")
-        print(f"Goal: {goal}")
-
         return Costmap(
             rows=rows,
             cols=cols,
             robot=robot,
             goal=goal,
             data=costmap)
-
-    # TODO
-    # @classmethod
-    # def from_map(
-    #         cls,
-    #         map: np.array,
-    #         robot: Optional[Tuple[int, int]] = None,
-    #         goal: Optional[Tuple[int, int]] = None
-    # ):
 
     def get_data(self):
         return self._data

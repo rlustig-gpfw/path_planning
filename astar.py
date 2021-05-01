@@ -28,18 +28,12 @@ class AStarHeuristics:
 
 @attrs(auto_attribs=True)
 class AStar(object):
-    # f = g + h
-    # f = total cost of node
-    # g = dist between current node and start node
-    # h = heuristic - est dist from current node to end node
     _costmap: Costmap
     _heuristic: Callable[[Location, Location], float] = AStarHeuristics.euclidean
 
     _parent_map: Dict[Tuple, Tuple] = attrib(init=False, factory=dict)
     _queue: PriorityQueue = attrib(init=False, factory=lambda: PriorityQueue())
     _cost_so_far: Dict[Location, float] = attrib(init=False, factory=dict)
-
-    SQRT2 = 0.5 ** 2
 
     def __attrs_post_init__(self):
         # Append robot position as the starting node
@@ -104,7 +98,7 @@ class AStar(object):
                 # Save parents-to-child map so that the path can be extracted
                 self._parent_map[n] = current_pos
 
-                # Mark costmap value so that it can be drawn
+                # Mark costmap value for visualization
                 if self._costmap.get_value(n) != Items.GOAL:
                     self._costmap.set_value(n, Items.CURRENT)
 
