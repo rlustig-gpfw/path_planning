@@ -1,5 +1,5 @@
 import random
-from typing import Tuple, Optional, Sequence, Dict, Any, List
+from typing import Tuple, Optional, Sequence, Dict, Any, List, Union
 
 import imageio
 import matplotlib.pyplot as plt
@@ -97,10 +97,10 @@ class Costmap(object):
             goal=goal,
             data=costmap)
 
-    def get_data(self):
+    def get_data(self) -> 'Array[M,N]':
         return self._data
 
-    def get_value(self, location):
+    def get_value(self, location) -> Union[int, float]:
         return self._data[location.y, location.x]
 
     def get_open_neighbors(self, loc: Location) -> Optional[Sequence[Location]]:
@@ -119,20 +119,20 @@ class Costmap(object):
                     neighbors.append(Location(x=c, y=r))
         return neighbors
 
-    def set_robot(self, robot: Location):
+    def set_robot(self, robot: Location) -> None:
         self._data[self.robot.y, self.robot.x] = Items.OPEN
         self.robot = robot
         self._data[robot.y, robot.x] = Items.ROBOT
 
-    def set_goal(self, goal: Location):
+    def set_goal(self, goal: Location) -> None:
         self._data[self.goal.y, self.goal.x] = Items.OPEN
         self.goal = goal
         self._data[goal.y, goal.x] = Items.GOAL
 
-    def set_value(self, loc: Location, value: Items):
+    def set_value(self, loc: Location, value: Items) -> None:
         self._data[loc.y, loc.x] = value
 
-    def print(self):
+    def print(self) -> None:
         for r in range(0, self.rows):
             print()
             for c in range(0, self.cols):
