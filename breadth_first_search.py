@@ -30,7 +30,7 @@ class BFS(object):
             path = []
             curr = current_pos
             while curr != self._costmap.robot:
-                if curr != self._costmap.goal:
+                if curr != self._goal:
                     self._costmap.set_value(curr, Items.PARENT)
                 path.append(curr)
                 curr = self._parent_map[curr]
@@ -47,7 +47,7 @@ class BFS(object):
             if self._costmap.get_value(n) == Items.CURRENT:
                 continue
 
-            if n != self._costmap.goal:
+            if n != self._goal:
                 self._costmap.set_value(n, Items.CURRENT)
             self._queue.append(n)
             # Save parents-to-child map so that the path can be extracted
