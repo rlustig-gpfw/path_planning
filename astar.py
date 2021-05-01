@@ -7,9 +7,13 @@ from costmap import Costmap, Items, generate_random_costmap, EasyGIFWriter, gene
 
 
 def _compute_movement_cost(from_loc: Location, to_loc: Location) -> float:
+    """
+    Cost to move from 'from_loc' to 'to_loc'.
+    Checkerboard movements are slightly penalized
+    """
     dist_cost = 1
 
-    # Add small penalty to diagonal movements for better looking paths:
+    # Add small penalty to checkerboard pattern movements for better looking paths:
     # https://www.redblobgames.com/pathfinding/a-star/implementation.html
     penalty = 0
     (x1, y1) = from_loc.x, from_loc.y
@@ -80,15 +84,19 @@ class AStar(object):
         if current_value != Items.ROBOT:
             self._costmap.set_value(current_pos, Items.VISITED)
 
-        # Add neighbors to list, add to parent list
+        # Compute cost to move to new neighbor.
+        # If the neighbor is newly visited or the cost is lower than the
+        # previous visit, add the neighbor to the queue
         neighbors = self._costmap.get_open_neighbors(current_pos)
         for n in neighbors:
-            # Cost to move from current position to neighbot
+            # Cost to move from current position to neighbor
             dist_cost = _compute_movement_cost(current_pos, n)
 
             # Update base cost with cost to move to neighbor
             new_cost = self._cost_so_far[current_pos] + dist_cost
 
+            # If there is no cost for this neighbor or the current cost is
+            # lower than the cost during a previous visit, update the queue with the neighbor
             if n not in self._cost_so_far or new_cost < self._cost_so_far[n]:
                 # Save or update current cost
                 self._cost_so_far[n] = new_cost
