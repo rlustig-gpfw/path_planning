@@ -120,12 +120,14 @@ class Costmap(object):
         return neighbors
 
     def set_robot(self, robot: Location) -> None:
-        self._data[self.robot.y, self.robot.x] = Items.OPEN
+        if self.get_value(robot) != Items.GOAL:
+            self._data[self.robot.y, self.robot.x] = Items.OPEN
         self.robot = robot
         self._data[robot.y, robot.x] = Items.ROBOT
 
     def set_goal(self, goal: Location) -> None:
-        self._data[self.goal.y, self.goal.x] = Items.OPEN
+        if self.get_value(goal) != Items.ROBOT:
+            self._data[self.goal.y, self.goal.x] = Items.OPEN
         self.goal = goal
         self._data[goal.y, goal.x] = Items.GOAL
 
