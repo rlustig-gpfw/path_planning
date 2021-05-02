@@ -70,6 +70,7 @@ class AStar(object):
 
         if current_pos == self._goal:
             # Create and return path
+            self.print()
             path = []
             curr = current_pos
             while curr != self._costmap.robot:
@@ -113,13 +114,23 @@ class AStar(object):
 
         return None
 
+    def print(self):
+        for r in range(0,self._costmap.rows):
+            for c in range(0, self._costmap.cols):
+                try:
+                    cost = self._cost_so_far[Location(x=c, y=r)]
+                except:
+                    cost = 0.0
+                print(f"{cost:.4f}\t", end="")
+            print()
+
 
 if __name__ == "__main__":
     costmap = generate_random_costmap(20, 30, 0.4)
     # costmap = generate_vertical_wall_costmap(rows=10)
     costmap.draw()
 
-    with EasyGIFWriter("astar.gif", scale_factor=25) as gif_writer:
+    with EasyGIFWriter("astar.gif", scale_factor=10) as gif_writer:
         astar = AStar(costmap)
         while True:
             path = astar.step()
