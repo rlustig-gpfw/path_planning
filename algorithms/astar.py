@@ -3,7 +3,7 @@ from typing import Dict, Tuple, Callable, Optional, Sequence
 
 from attr import attrs, attrib
 
-from costmap import Costmap, Items, generate_random_costmap, EasyGIFWriter, generate_vertical_wall_costmap, Location
+from algorithms.costmap import Costmap, Items, generate_random_costmap, EasyGIFWriter, generate_vertical_wall_costmap, Location
 
 
 def _compute_movement_cost(from_loc: Location, to_loc: Location) -> float:
