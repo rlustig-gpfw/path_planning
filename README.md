@@ -28,7 +28,7 @@ context-managed `EasyGIFWriter` class to write out a list of images as a GIF.
 ![Depth First Search](gifs/dfs.gif)
 
 #### Breadth First Search (BFS)
-![Breadth First Search](gifs/dfs.gif)
+![Breadth First Search](gifs/bfs.gif)
 
 #### A* Search
 ![A*](gifs/astar.gif)
