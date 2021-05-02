@@ -70,7 +70,6 @@ class AStar(object):
 
         if current_pos == self._goal:
             # Create and return path
-            self.print()
             path = []
             curr = current_pos
             while curr != self._costmap.robot:
@@ -113,16 +112,6 @@ class AStar(object):
                     self._costmap.set_value(n, Items.CURRENT)
 
         return None
-
-    def print(self):
-        for r in range(0,self._costmap.rows):
-            for c in range(0, self._costmap.cols):
-                try:
-                    cost = self._cost_so_far[Location(x=c, y=r)]
-                except:
-                    cost = 0.0
-                print(f"{cost:.4f}\t", end="")
-            print()
 
 
 if __name__ == "__main__":
