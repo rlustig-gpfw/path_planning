@@ -220,7 +220,12 @@ def generate_random_costmap(rows: int = 10, cols: int = 10, obstacle_percentage:
     return costmap
 
 
-def generate_vertical_wall_costmap(rows: int = 10, cols: int = 10):
+def generate_vertical_wall_costmap(
+        rows: int = 10,
+        cols: int = 10,
+        robot: Location = None,
+        goal: Location = None
+):
     assert rows > 1 and cols > 1
     # Find
     wall_rows = list(range(rows))
@@ -228,8 +233,10 @@ def generate_vertical_wall_costmap(rows: int = 10, cols: int = 10):
     wall_rows.remove(0)
     wall_col = cols // 2
 
-    robot = Location(0, 0)
-    goal = Location(cols - 1, rows - 1)
+    if not robot:
+        robot = Location(0, 0)
+    if not goal:
+        goal = Location(cols - 1, rows - 1)
 
     costmap = Costmap.create_map(rows, cols)
     data = costmap.get_data()
