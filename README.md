@@ -43,4 +43,4 @@ context-managed `EasyGIFWriter` class to write out a list of images as a GIF.
 #### Map 2
 | Euclidean | Manhattan | Chebyshev|
 |-----------|-----------|----------|
-|  <img src="https://user-images.githubusercontent.com/7671719/116960365-0326bc80-ac55-11eb-9aec-4544c617eccf.gif" width=250>></img> | <img src="https://user-images.githubusercontent.com/7671719/116960368-03bf5300-ac55-11eb-974c-446846c926aa.gif" width=250>></img> | <img src="https://user-images.githubusercontent.com/7671719/116960364-01f58f80-ac55-11eb-8516-f8a59dada599.gif" width=250></img> |
+|  <img src="https://user-images.githubusercontent.com/7671719/116960365-0326bc80-ac55-11eb-9aec-4544c617eccf.gif" width=250></img> | <img src="https://user-images.githubusercontent.com/7671719/116960368-03bf5300-ac55-11eb-974c-446846c926aa.gif" width=250></img> | <img src="https://user-images.githubusercontent.com/7671719/116960364-01f58f80-ac55-11eb-8516-f8a59dada599.gif" width=250></img> |
