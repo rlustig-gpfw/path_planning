@@ -42,7 +42,7 @@ class AStarHeuristics:
         diff = a - b
         dx = abs(diff.x)
         dy = abs(diff.y)
-        return dx + dy - 2 * min(dx, dy)
+        return dx + dy - min(dx, dy)
 
 
 @attrs(auto_attribs=True)
