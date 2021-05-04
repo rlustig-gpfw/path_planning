@@ -19,6 +19,7 @@ The following files are used to support the search and path planning visualizati
   - Create a grid with placement of a robot, goal, and obstacles
   - Manipulate the values of the costmap as the search algorithms move around the map
   - Draw the costmap and display as an image
+
 This class also includes a random `Costmap` generator function as well a
 context-managed `EasyGIFWriter` class to write out a list of images as a GIF.
 
