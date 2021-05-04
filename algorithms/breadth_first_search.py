@@ -60,7 +60,7 @@ if __name__ == "__main__":
     costmap = generate_random_costmap(20, 30, 0.4)
     costmap.draw()
 
-    with EasyGIFWriter("bfs.gif", scale_factor=10) as gif_writer:
+    with EasyGIFWriter("bfs.gif", scale_factor=25) as gif_writer:
         bfs = BFS(costmap)
         while True:
             path = bfs.step()
