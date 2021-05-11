@@ -2,7 +2,8 @@ from typing import Tuple, Dict, List
 
 from attr import attrs, attrib
 
-from algorithms.costmap import Costmap, Items, generate_random_costmap, EasyGIFWriter, Location
+from algorithms.costmap import Costmap, generate_random_costmap, EasyGIFWriter, Location
+from algorithms.utils import Items
 
 
 @attrs(auto_attribs=True)
