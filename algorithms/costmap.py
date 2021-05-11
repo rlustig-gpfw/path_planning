@@ -72,7 +72,8 @@ class Costmap(object):
             cols=cols,
             robot=robot,
             goal=goal,
-            data=costmap)
+            data=costmap
+        )
 
     def get_data(self) -> 'Array[M,N]':
         return self._data
@@ -149,7 +150,7 @@ class EasyGIFWriter(object):
     def __enter__(self):
         return self
 
-    def write(self, image):
+    def write(self, image: 'Array[M,N,3]') -> None:
         self._frame_list.append(image)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -178,7 +179,7 @@ def generate_random_location(max_row: int, max_col: int) -> Location:
     return Location(x=random.randint(0, max_col - 1), y=random.randint(0, max_row - 1))
 
 
-def generate_random_costmap(rows: int = 10, cols: int = 10, obstacle_percentage: float = 0.25):
+def generate_random_costmap(rows: int = 10, cols: int = 10, obstacle_percentage: float = 0.25) -> Costmap:
 
     assert rows > 1 and cols > 1
     obstacles = np.random.rand(rows, cols) <= obstacle_percentage
@@ -202,9 +203,8 @@ def generate_vertical_wall_costmap(
         cols: int = 10,
         robot: Location = None,
         goal: Location = None
-):
+) -> Costmap:
     assert rows > 1 and cols > 1
-    # Find
     wall_rows = list(range(rows))
     # wall_rows.remove(rows // 2)  # Remove middle element
     wall_rows.remove(0)
