@@ -1,3 +1,8 @@
+from typing import Tuple
+
+
+Color = Tuple[int, int, int]
+
 
 class Colors:
     WHITE = (255, 255, 255)

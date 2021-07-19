@@ -7,7 +7,7 @@ import numpy as np
 from attr import attrs, attrib
 from matplotlib.colors import Colormap, Normalize
 
-from algorithms.utils import Items, Colors, clamp
+from algorithms.utils import Items, Colors, clamp, Color
 
 ITEMS_TO_COLOR_MAPPING = {
     Items.OPEN: Colors.WHITE,
@@ -34,14 +34,14 @@ class Location:
 
 @attrs(auto_attribs=True)
 class Costmap(object):
-
+    """ Stores a costmap of a 2D (x, y) array """
     rows: int
     cols: int
     robot: Location
     goal: Location
 
     _data: 'Array[M,N]'
-    _items_to_colors_mapping: Optional[Dict[int, Tuple[int, int, int]]] = attrib(default=ITEMS_TO_COLOR_MAPPING)
+    _items_to_colors_mapping: Optional[Dict[int, Color]] = attrib(default=ITEMS_TO_COLOR_MAPPING)
 
     _fig: Any = attrib(init=False)
     _ax: plt.Axes = attrib(init=False)
@@ -82,6 +82,11 @@ class Costmap(object):
         return self._data[location.y, location.x]
 
     def get_open_neighbors(self, loc: Location) -> Optional[Sequence[Location]]:
+        """
+        Get a list of the open neighbors that are not an obstacle, robot, or visited
+        :param loc: the center location to search around for neighbors
+        :return: list of open neighbors
+        """
         col = loc.x
         row = loc.y
         neighbors = []
@@ -98,12 +103,14 @@ class Costmap(object):
         return neighbors
 
     def set_robot(self, robot: Location) -> None:
+        # reset robot costmap location
         if self.get_value(robot) != Items.GOAL:
             self._data[self.robot.y, self.robot.x] = Items.OPEN
         self.robot = robot
         self._data[robot.y, robot.x] = Items.ROBOT
 
     def set_goal(self, goal: Location) -> None:
+        # reset goal costmap location
         if self.get_value(goal) != Items.ROBOT:
             self._data[self.goal.y, self.goal.x] = Items.OPEN
         self.goal = goal
@@ -113,6 +120,9 @@ class Costmap(object):
         self._data[loc.y, loc.x] = value
 
     def print(self) -> None:
+        """
+        Print an ASCII-based costmap
+        """
         for r in range(0, self.rows):
             print()
             for c in range(0, self.cols):

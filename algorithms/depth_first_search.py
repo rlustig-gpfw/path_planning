@@ -1,4 +1,4 @@
-from typing import Tuple, Dict, List
+from typing import Tuple, Dict, List, Sequence, Optional
 
 from attr import attrs, attrib
 
@@ -18,7 +18,7 @@ class DFS(object):
         self._stack.append(self._costmap.robot)
         self._goal = self._costmap.goal
 
-    def step(self):
+    def step(self) -> Optional[Sequence[Location]]:
 
         if len(self._stack) == 0:
             raise Exception("Path does not exist!")

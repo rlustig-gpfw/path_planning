@@ -1,4 +1,4 @@
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Sequence, Optional
 
 from attr import attrs, attrib
 
@@ -18,7 +18,7 @@ class BFS(object):
         self._queue.append(self._costmap.robot)
         self._goal = self._costmap.goal
 
-    def step(self):
+    def step(self) -> Optional[Sequence[Location]]:
 
         if len(self._queue) == 0:
             raise Exception("Path does not exist!")
